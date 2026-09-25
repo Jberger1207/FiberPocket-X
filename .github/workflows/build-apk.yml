@@ -2,7 +2,11 @@ name: Build FiberPocket X APK
 on:
   push:
     branches: [ main ]
+    paths-ignore:
+      - 'downloads/**'
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -28,3 +32,13 @@ jobs:
           name: FiberPocket-X-APK
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+      - name: Publish APK in repository
+        run: |
+          mkdir -p downloads
+          cp app/build/outputs/apk/debug/app-debug.apk downloads/FiberPocket-X-latest.apk
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add downloads/FiberPocket-X-latest.apk
+          git diff --cached --quiet && exit 0
+          git commit -m "Publish latest FiberPocket X APK"
+          git push
