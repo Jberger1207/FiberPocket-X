@@ -27,15 +27,27 @@ jobs:
           gradle-version: '8.10.2'
       - name: Build debug APK
         run: gradle :app:assembleDebug --stacktrace
+      - name: Prepare APK
+        run: |
+          mkdir -p downloads
+          cp app/build/outputs/apk/debug/app-debug.apk downloads/FiberPocket-X-v1.0.1.apk
+          cp app/build/outputs/apk/debug/app-debug.apk downloads/FiberPocket-X-latest.apk
       - uses: actions/upload-artifact@v4
         with:
           name: FiberPocket-X-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: downloads/FiberPocket-X-v1.0.1.apk
           if-no-files-found: error
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view v1.0.1 >/dev/null 2>&1; then
+            gh release upload v1.0.1 downloads/FiberPocket-X-v1.0.1.apk --clobber
+          else
+            gh release create v1.0.1 downloads/FiberPocket-X-v1.0.1.apk --title "FiberPocket X v1.0.1" --notes "APK Android de prueba de FiberPocket X. Compilado y probado en Android 14."
+          fi
       - name: Publish APK in repository
         run: |
-          mkdir -p downloads
-          cp app/build/outputs/apk/debug/app-debug.apk downloads/FiberPocket-X-latest.apk
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add downloads/FiberPocket-X-latest.apk
